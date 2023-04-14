@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 
 ## cambio esto por eso
+# lo vuelvo a cambiar
 
 def add_noise(data):
     noise_value = 0.015 * np.random.uniform() * np.amax(data)
