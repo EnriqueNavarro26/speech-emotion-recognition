@@ -4,6 +4,12 @@ from utils import add_noise, change_speed, shift_process, pitch_process
 import os
 import glob
 import pandas as pd
+import numpy as np
+
+from tqdm import tqdm
+
+import warnings 
+warnings.filterwarnings('ignore')
 
 # Define the paths to the data folders
 path_tess = '../data/TESS/'
@@ -286,18 +292,56 @@ def concat_csvs():
     df_final = pd.concat(df_list)
     df_final.to_csv('df_final.csv', index=False)
 
+def write_iesc_csv(data_aug = False):
+
+    map_iesc = {
+        'desprecio': 'negative',
+        'enojo': 'negative',
+        'miedo': 'negative',
+        'neutral': 'neutral',
+        'felicidad': 'positive',
+        'tristeza': 'negative',
+        'sorpresa': 'positive'
+    }
+    path_iesc = '../../../AudioSegment/data/IESC-Child/IESC-Child-RN/'
+    X, y = [], []
+    excel = pd.read_excel(os.path.join(path_iesc, 'Files_labels.xlsx'))
+    excel = excel[excel['Emotion'] != 'ninguno']
+    print(excel.Filename, excel.Emotion)
+    print(np.unique(excel.Emotion, return_counts=True))
+
+    for row in tqdm(excel.iterrows()):
+        file_name = row[1].Filename
+        emotion = row[1].Emotion
+        audio_path = os.path.join(path_iesc, 'wav',file_name)
+        if data_aug == False:
+            result = export_process(audio_path)
+            X.append(result)
+            y.append(map_iesc[emotion])
+        else:
+            results = export_process(audio_path, data_augmentation=True)
+            for result in results:
+                X.append(result)
+                y.append(map_iesc[emotion])
+
+    df_iesc = pd.DataFrame(X)
+    df_iesc['target'] = y
+    df_iesc.to_csv('df_iesc.csv', index=False)
+    print('[INFO] df_iesc.csv saved')
+
 
 if __name__ == '__main__':
-    write_tess_csv(data_aug=data_aug)
-    write_emodb_csv(data_aug=data_aug)
-    write_custom_csv(data_aug=data_aug)
-    write_ravdess_csv(data_aug=data_aug)
-    write_savee_csv(data_aug=data_aug)
+    # write_tess_csv(data_aug=data_aug)
+    # write_emodb_csv(data_aug=data_aug)
+    # write_custom_csv(data_aug=data_aug)
+    # write_ravdess_csv(data_aug=data_aug)
+    # write_savee_csv(data_aug=data_aug)
     
-    # write_mesd_csv(data_aug=data_aug)
-    write_ruso_csv(data_aug=data_aug)
-    # write_mesd_csv(data_aug=True)
-    concat_csvs()
+    # # write_mesd_csv(data_aug=data_aug)
+    # write_ruso_csv(data_aug=data_aug)
+    # # write_mesd_csv(data_aug=True)
+    # concat_csvs()
 
+    write_iesc_csv()
 
 
